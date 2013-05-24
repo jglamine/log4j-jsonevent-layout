@@ -107,7 +107,7 @@ public class JSONEventLayout extends Layout {
             String value = entry.getValue();
             mdcNode.put(key, value);
         }
-
+        fieldsNode.put("mdc", mdcNode);
 
         fieldsNode.put("ndc",ndc);
         fieldsNode.put("level", loggingEvent.getLevel().toString());

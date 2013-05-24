@@ -5,6 +5,7 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 import org.apache.log4j.NDC;
 import org.apache.log4j.PatternLayout;
 import org.junit.After;
@@ -87,6 +88,21 @@ public class JSONEventLayoutTest {
         JSONObject atFields = (JSONObject) jsonObject.get("@fields");
 
         Assert.assertEquals("NDC is wrong", ndcData, atFields.get("ndc"));
+    }
+
+    @Test
+    public void testMDC() throws Exception {
+        MDC.put("key-one", "data-one");
+        MDC.put("key-two", "data-two");
+        logger.info("This should have some mdc data on it");
+        String message = appender.getMessages()[0];
+        Object obj = JSONValue.parse(message);
+        JSONObject jsonObject = (JSONObject) obj;
+        JSONObject atFields = (JSONObject) jsonObject.get("@fields");
+        JSONObject mdc = (JSONObject)atFields.get("mdc");
+
+        Assert.assertEquals("MDC is wrong", "data-one", mdc.get("key-one"));
+        Assert.assertEquals("MDC is wrong", "data-two", mdc.get("key-two"));
     }
 
     @Test
