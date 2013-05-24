@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.logstash.log4j.data.HostData;
-
-import org.apache.commons.lang.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LocationInfo;
@@ -13,26 +12,16 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 public class JSONEventLayout extends Layout {
-
     private static final ObjectMapper MAPPER = new ObjectMapper().configure(Feature.ESCAPE_NON_ASCII, true);
 
     private boolean locationInfo = false;
-
-    private String tags;
     private boolean ignoreThrowable = false;
 
     private boolean activeIgnoreThrowable = ignoreThrowable;
-    private String hostname = new HostData().getHostName();
-    private long timestamp;
-    private String ndc;
-    private Map<String, String> mdc;
-    private LocationInfo info;
-    private HashMap<String, Object> fieldData;
-    private HashMap<String, Object> exceptionInformation;
+    private final String hostname = new HostData().getHostName();
 
     public static final FastDateFormat ISO_DATETIME_TIME_ZONE_FORMAT_WITH_MILLIS = FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
 
@@ -58,16 +47,11 @@ public class JSONEventLayout extends Layout {
     }
 
     public String format(LoggingEvent loggingEvent) {
-        timestamp = loggingEvent.getTimeStamp();
-        fieldData = new HashMap<String, Object>();
-        exceptionInformation = new HashMap<String, Object>();
-        mdc = loggingEvent.getProperties();
-        ndc = loggingEvent.getNDC();
+        long timestamp = loggingEvent.getTimeStamp();
+        Map<String, String> mdc = loggingEvent.getProperties();
+        String ndc = loggingEvent.getNDC();
 
-        //logstashEvent = new JSONObject();
         ObjectNode eventNode = MAPPER.createObjectNode();
-
-
 
         eventNode.put("@source_host",hostname);
         eventNode.put("@message",loggingEvent.getRenderedMessage());
@@ -93,27 +77,24 @@ public class JSONEventLayout extends Layout {
         }
 
         if (locationInfo) {
-            info = loggingEvent.getLocationInformation();
+            LocationInfo info = loggingEvent.getLocationInformation();
             fieldsNode.put("file", info.getFileName());
             fieldsNode.put("line_number", info.getLineNumber());
             fieldsNode.put("class", info.getClassName());
             fieldsNode.put("method", info.getMethodName());
         }
 
-        //fieldsNode.put("mdc",mdc);
         ObjectNode mdcNode = MAPPER.createObjectNode();
         for (Map.Entry<String, String> entry : mdc.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
             mdcNode.put(key, value);
         }
+        fieldsNode.put("mdc", mdcNode);
 
-
-        fieldsNode.put("ndc",ndc);
+        fieldsNode.put("ndc", ndc);
         fieldsNode.put("level", loggingEvent.getLevel().toString());
 
-        //eventNode.put("@fields", fieldData);
-        //return logstashEvent.toString() + "\n";
         return eventNode.toString();
     }
 
@@ -141,11 +122,5 @@ public class JSONEventLayout extends Layout {
 
     public void activateOptions() {
         activeIgnoreThrowable = ignoreThrowable;
-    }
-
-    private void addFieldData(String keyname, Object keyval) {
-        if (null != keyval) {
-            fieldData.put(keyname, keyval);
-        }
     }
 }
