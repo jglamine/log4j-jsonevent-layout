@@ -48,7 +48,7 @@ public class JSONEventLayout extends Layout {
 
     public String format(LoggingEvent loggingEvent) {
         long timestamp = loggingEvent.getTimeStamp();
-        Map<String, String> mdc = loggingEvent.getProperties();
+        Map<String, Object> mdc = loggingEvent.getProperties();
         String ndc = loggingEvent.getNDC();
 
         ObjectNode eventNode = MAPPER.createObjectNode();
@@ -85,10 +85,10 @@ public class JSONEventLayout extends Layout {
         }
 
         ObjectNode mdcNode = MAPPER.createObjectNode();
-        for (Map.Entry<String, String> entry : mdc.entrySet()) {
+        for (Map.Entry<String, Object> entry : mdc.entrySet()) {
             String key = entry.getKey();
-            String value = entry.getValue();
-            mdcNode.put(key, value);
+            Object value = entry.getValue();
+            mdcNode.put(key, String.valueOf(value));
         }
         fieldsNode.put("mdc", mdcNode);
 

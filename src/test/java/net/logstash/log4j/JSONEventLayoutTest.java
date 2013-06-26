@@ -90,10 +90,27 @@ public class JSONEventLayoutTest {
         Assert.assertEquals("NDC is wrong", ndcData, atFields.get("ndc"));
     }
 
+    private static final class MDCValue {
+        private final String one;
+        private final int two;
+
+        private MDCValue(String one, int two) {
+            this.one = one;
+            this.two = two;
+        }
+
+        @Override
+        public String toString() {
+            return "one='" + one + '\'' +
+                    ", two=" + two;
+        }
+    }
+
     @Test
     public void testMDC() throws Exception {
         MDC.put("key-one", "data-one");
         MDC.put("key-two", "data-two");
+        MDC.put("key-three", new MDCValue("object-one", 2));
         logger.info("This should have some mdc data on it");
         String message = appender.getMessages()[0];
         Object obj = JSONValue.parse(message);
@@ -103,6 +120,7 @@ public class JSONEventLayoutTest {
 
         Assert.assertEquals("MDC is wrong", "data-one", mdc.get("key-one"));
         Assert.assertEquals("MDC is wrong", "data-two", mdc.get("key-two"));
+        Assert.assertEquals("MDC object is wrong", "one='object-one', two=2", mdc.get("key-three"));
     }
 
     @Test
