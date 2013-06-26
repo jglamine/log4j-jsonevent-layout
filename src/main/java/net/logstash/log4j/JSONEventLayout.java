@@ -95,7 +95,7 @@ public class JSONEventLayout extends Layout {
         fieldsNode.put("ndc", ndc);
         fieldsNode.put("level", loggingEvent.getLevel().toString());
 
-        return eventNode.toString();
+        return eventNode.toString() + "\n";
     }
 
     public boolean ignoresThrowable() {
