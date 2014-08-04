@@ -1,11 +1,13 @@
 package net.logstash.log4j;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import junit.framework.Assert;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 import org.apache.log4j.NDC;
 import org.junit.After;
 import org.junit.Before;
@@ -262,5 +264,23 @@ public class JSONEventLayoutV1Test {
     public void testDateFormat() {
         long timestamp = 1364844991207L;
         Assert.assertEquals("format does not produce expected output", "2013-04-01T19:36:31.207Z", JSONEventLayoutV1.dateFormat(timestamp));
+    }
+
+    @Test
+    public void testMDC() throws Exception {
+        JSONEventLayoutV1 layout = (JSONEventLayoutV1) appender.getLayout();
+
+        MDC.put("int", 1);
+        MDC.put("string", "one");
+        logger.warn("warning dawg");
+        String message = appender.getMessages()[0];
+        Object obj = JSONValue.parse(message);
+        JSONObject jsonObject = (JSONObject) obj;
+
+        Assert.assertEquals("atFields contains mdc integer", 1, ((JSONObject)jsonObject.get("mdc")).get("int"));
+        Assert.assertEquals("atFields contains mdc string", "one", ((JSONObject)jsonObject.get("mdc")).get("string"));
+
+        // revert MDC
+        MDC.clear();
     }
 }
